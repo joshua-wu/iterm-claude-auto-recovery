@@ -19,7 +19,17 @@ _claude_tab_remove() {
 
 _claude_tab_session_exists() {
   local sid="$1"
-  [[ -n $(find "$HOME/.claude/projects" -name "${sid}.jsonl" -maxdepth 2 -print -quit 2>/dev/null) ]]
+  [[ -n $(find "$HOME/.claude/projects" -maxdepth 2 -name "${sid}.jsonl" -print -quit 2>/dev/null) ]]
+}
+
+_claude_gen_uuid() {
+  if command -v uuidgen &>/dev/null; then
+    uuidgen | tr 'A-Z' 'a-z'
+  elif [[ -r /proc/sys/kernel/random/uuid ]]; then
+    cat /proc/sys/kernel/random/uuid
+  else
+    od -x /dev/urandom | head -1 | awk '{print $2$3"-"$4"-"$5"-"$6"-"$7$8$9}'
+  fi
 }
 
 claude() {
@@ -64,7 +74,7 @@ claude() {
 
   # --new → 强制新建 session，更新映射
   if $force_new; then
-    local new_id=$(uuidgen | tr 'A-Z' 'a-z')
+    local new_id=$(_claude_gen_uuid)
     _claude_tab_save "$iterm_uuid" "$new_id"
     command claude --session-id "$new_id" "${clean_args[@]}"
     return
@@ -85,7 +95,7 @@ claude() {
   fi
 
   # 新建 session
-  local new_id=$(uuidgen | tr 'A-Z' 'a-z')
+  local new_id=$(_claude_gen_uuid)
   _claude_tab_save "$iterm_uuid" "$new_id"
   command claude --session-id "$new_id" "${clean_args[@]}"
 }

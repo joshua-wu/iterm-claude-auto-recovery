@@ -1,103 +1,105 @@
-# iTerm2 Claude Code Auto Recovery
+# iTerm2 Claude Code 会话自动恢复
 
-Automatically resume your last Claude Code session when you reopen an iTerm2 tab.
+[English](README_EN.md)
 
-## The Problem
+在 iTerm2 中重新打开标签页时，自动恢复上一次的 Claude Code 会话。
 
-Every time you close and reopen an iTerm2 tab, running `claude` starts a brand new session — your previous conversation context is lost. You have to manually use `claude --resume <session-id>` to get back to where you were.
+## 解决的问题
 
-## How It Works
+每次关闭并重新打开 iTerm2 标签页后，运行 `claude` 都会启动一个全新的会话——之前的对话上下文全部丢失。你不得不手动执行 `claude --resume <session-id>` 才能回到之前的会话。
 
-This script wraps the `claude` command with a shell function that:
+## 工作原理
 
-1. **Maps each iTerm2 tab to a Claude session** — using iTerm2's unique tab UUID (`ITERM_SESSION_ID`) as the key
-2. **Auto-resumes** — when you type `claude` in a tab that previously had a session (same working directory), it automatically resumes that session
-3. **Falls back gracefully** — in non-iTerm2 terminals, the `claude` command works exactly as before
+本脚本通过 shell 函数包装 `claude` 命令：
 
-The mapping is stored in `~/.claude/tab-sessions.json`.
+1. **将每个 iTerm2 标签页映射到一个 Claude 会话** —— 使用 iTerm2 的唯一标签页 UUID（`ITERM_SESSION_ID`）作为 key
+2. **自动恢复** —— 当你在之前有过会话的标签页中输入 `claude` 时（且在同一工作目录下），自动恢复该会话
+3. **优雅降级** —— 在非 iTerm2 终端中，`claude` 命令的行为与原来完全一致
 
-## Features
+映射关系存储在 `~/.claude/tab-sessions.json` 中。
 
-- **Zero friction** — just type `claude` as usual, sessions are resumed automatically
-- **Directory-aware** — only resumes if you're in the same directory as the original session
-- **Session validation** — checks that the session file still exists before resuming
-- **Override controls**:
-  - `claude --new` — force a new session in the current tab
-  - `claude --resume <id>` / `claude -r` / `claude -c` — manual session control (passed through as-is)
-- **Debug tool** — run `claude-sessions` to inspect current tab-to-session mappings
+## 功能特性
 
-## Prerequisites
+- **零感知** —— 像平常一样输入 `claude`，会话自动恢复
+- **目录感知** —— 只有在与原始会话相同的目录下才会恢复
+- **会话验证** —— 恢复前会检查会话文件是否仍然存在
+- **手动控制**：
+  - `claude --new` —— 在当前标签页强制新建会话
+  - `claude --resume <id>` / `claude -r` / `claude -c` —— 手动会话控制（直接透传）
+- **调试工具** —— 运行 `claude-sessions` 查看当前标签页与会话的映射关系
 
-- [iTerm2](https://iterm2.com/) (macOS terminal emulator)
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed
-- [jq](https://jqlang.github.io/jq/) — `brew install jq`
+## 前置依赖
 
-## Install / Uninstall with Claude
+- [iTerm2](https://iterm2.com/)（macOS 终端模拟器）
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI 已安装
+- [jq](https://jqlang.github.io/jq/) —— `brew install jq`
 
-### Install
+## 通过 Claude 安装 / 卸载
 
-Copy the prompt below and paste it into Claude Code:
+### 安装
 
-> Clone the repo https://github.com/joshua-wu/iterm-claude-auto-recovery to `~/.local/share/iterm-claude-auto-recovery`. Then detect my current shell (check `$SHELL`), and add `source ~/.local/share/iterm-claude-auto-recovery/iterm_claude_auto_recovery.sh` to my shell rc file (`~/.zshrc` for zsh, `~/.bashrc` for bash). Make sure not to add a duplicate line if it already exists. Verify with a syntax check on the rc file after editing.
+将下面的 prompt 复制粘贴到 Claude Code 中即可：
 
-### Uninstall
+> 将 https://github.com/joshua-wu/iterm-claude-auto-recovery 克隆到 `~/.local/share/iterm-claude-auto-recovery`。然后检测我当前使用的 shell（通过 `$SHELL` 判断），将 `source ~/.local/share/iterm-claude-auto-recovery/iterm_claude_auto_recovery.sh` 添加到对应的 shell 配置文件中（zsh 对应 `~/.zshrc`，bash 对应 `~/.bashrc`）。如果已存在则不要重复添加。完成后对配置文件做语法检查。
 
-Copy the prompt below and paste it into Claude Code:
+### 卸载
 
-> Remove the line that sources `iterm_claude_auto_recovery.sh` from my shell rc file (check `$SHELL` to determine whether it's `~/.zshrc` or `~/.bashrc`). Also delete the directory `~/.local/share/iterm-claude-auto-recovery` and the mapping file `~/.claude/tab-sessions.json` if they exist. Verify with a syntax check on the rc file after editing.
+将下面的 prompt 复制粘贴到 Claude Code 中即可：
 
-## Manual Install
+> 从我的 shell 配置文件中删除 source `iterm_claude_auto_recovery.sh` 的那一行（通过 `$SHELL` 判断对应 `~/.zshrc` 还是 `~/.bashrc`）。同时删除目录 `~/.local/share/iterm-claude-auto-recovery` 和映射文件 `~/.claude/tab-sessions.json`（如果存在的话）。完成后对配置文件做语法检查。
+
+## 手动安装
 
 ```bash
-# 1. Clone the repo
+# 1. 克隆仓库
 git clone https://github.com/joshua-wu/iterm-claude-auto-recovery ~/.local/share/iterm-claude-auto-recovery
 
-# 2. Add to your shell rc file
+# 2. 添加到 shell 配置文件
 
-# For zsh (~/.zshrc):
+# zsh 用户（~/.zshrc）：
 echo 'source ~/.local/share/iterm-claude-auto-recovery/iterm_claude_auto_recovery.sh' >> ~/.zshrc
 
-# For bash (~/.bashrc):
+# bash 用户（~/.bashrc）：
 echo 'source ~/.local/share/iterm-claude-auto-recovery/iterm_claude_auto_recovery.sh' >> ~/.bashrc
 
-# 3. Reload
-source ~/.zshrc  # or source ~/.bashrc
+# 3. 重新加载配置
+source ~/.zshrc  # 或 source ~/.bashrc
 ```
 
-## Manual Uninstall
+## 手动卸载
 
 ```bash
-# 1. Remove the source line from your rc file
-#    Open ~/.zshrc (or ~/.bashrc) and delete the line:
+# 1. 从配置文件中删除 source 行
+#    打开 ~/.zshrc（或 ~/.bashrc），删除以下这行：
 #    source ~/.local/share/iterm-claude-auto-recovery/iterm_claude_auto_recovery.sh
 
-# 2. Clean up
+# 2. 清理文件
 rm -rf ~/.local/share/iterm-claude-auto-recovery
 rm -f ~/.claude/tab-sessions.json
 ```
 
-## Usage
+## 使用方式
 
 ```bash
-# Just use claude as normal — sessions auto-resume per tab
+# 正常使用 claude —— 会话按标签页自动恢复
 claude
 
-# Force a brand new session in this tab
+# 在当前标签页强制新建会话
 claude --new
 
-# Inspect tab-session mappings
+# 查看标签页与会话的映射关系
 claude-sessions
 ```
 
-## How the Mapping Works
+## 映射机制
 
 ```
-iTerm2 Tab (UUID)  ──→  Claude Session ID + Working Directory
-     ↓                           ↓
-Tab reopened       ──→  Lookup mapping → validate session file
-                                 ↓
-                        Same dir + file exists → claude --resume <id>
-                        Otherwise             → new session
+iTerm2 标签页 (UUID)  ──→  Claude 会话 ID + 工作目录
+       ↓                           ↓
+  标签页重新打开      ──→  查询映射 → 验证会话文件
+                                   ↓
+                      同目录 + 文件存在 → claude --resume <id>
+                      否则             → 新建会话
 ```
 
 ## License
