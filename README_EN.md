@@ -14,7 +14,7 @@ This script wraps the `claude` command with a shell function that:
 2. **Auto-resumes** — when you type `claude` in a tab that previously had a session (same working directory), it automatically resumes that session
 3. **Falls back gracefully** — in non-iTerm2 terminals, the `claude` command works exactly as before
 
-The mapping is stored in `~/.claude/tab-sessions.json`.
+The mapping is stored in `~/.claude/tab-sessions.tsv`.
 
 ## Features
 
@@ -30,7 +30,7 @@ The mapping is stored in `~/.claude/tab-sessions.json`.
 
 - [iTerm2](https://iterm2.com/) (macOS terminal emulator)
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed
-- [jq](https://jqlang.github.io/jq/) — `brew install jq`
+- No other external dependencies (pure shell implementation)
 
 ## Install / Uninstall with Claude
 
@@ -44,7 +44,7 @@ Copy the prompt below and paste it into Claude Code:
 
 Copy the prompt below and paste it into Claude Code:
 
-> Remove the line that sources `iterm_claude_auto_recovery.sh` from my shell rc file (check `$SHELL` to determine whether it's `~/.zshrc` or `~/.bashrc`). Also delete the directory `~/.local/share/iterm-claude-auto-recovery` and the mapping file `~/.claude/tab-sessions.json` if they exist. Verify with a syntax check on the rc file after editing.
+> Remove the line that sources `iterm_claude_auto_recovery.sh` from my shell rc file (check `$SHELL` to determine whether it's `~/.zshrc` or `~/.bashrc`). Also delete the directory `~/.local/share/iterm-claude-auto-recovery` and the mapping file `~/.claude/tab-sessions.tsv` if they exist. Verify with a syntax check on the rc file after editing.
 
 ## Manual Install
 
@@ -73,7 +73,7 @@ source ~/.zshrc  # or source ~/.bashrc
 
 # 2. Clean up
 rm -rf ~/.local/share/iterm-claude-auto-recovery
-rm -f ~/.claude/tab-sessions.json
+rm -f ~/.claude/tab-sessions.tsv
 ```
 
 ## Usage

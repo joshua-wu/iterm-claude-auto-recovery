@@ -16,7 +16,7 @@
 2. **自动恢复** —— 当你在之前有过会话的标签页中输入 `claude` 时（且在同一工作目录下），自动恢复该会话
 3. **优雅降级** —— 在非 iTerm2 终端中，`claude` 命令的行为与原来完全一致
 
-映射关系存储在 `~/.claude/tab-sessions.json` 中。
+映射关系存储在 `~/.claude/tab-sessions.tsv` 中。
 
 ## 功能特性
 
@@ -32,7 +32,7 @@
 
 - [iTerm2](https://iterm2.com/)（macOS 终端模拟器）
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI 已安装
-- [jq](https://jqlang.github.io/jq/) —— `brew install jq`
+- 无其他外部依赖（纯 shell 实现）
 
 ## 通过 Claude 安装 / 卸载
 
@@ -46,7 +46,7 @@
 
 将下面的 prompt 复制粘贴到 Claude Code 中即可：
 
-> 从我的 shell 配置文件中删除 source `iterm_claude_auto_recovery.sh` 的那一行（通过 `$SHELL` 判断对应 `~/.zshrc` 还是 `~/.bashrc`）。同时删除目录 `~/.local/share/iterm-claude-auto-recovery` 和映射文件 `~/.claude/tab-sessions.json`（如果存在的话）。完成后对配置文件做语法检查。
+> 从我的 shell 配置文件中删除 source `iterm_claude_auto_recovery.sh` 的那一行（通过 `$SHELL` 判断对应 `~/.zshrc` 还是 `~/.bashrc`）。同时删除目录 `~/.local/share/iterm-claude-auto-recovery` 和映射文件 `~/.claude/tab-sessions.tsv`（如果存在的话）。完成后对配置文件做语法检查。
 
 ## 手动安装
 
@@ -75,7 +75,7 @@ source ~/.zshrc  # 或 source ~/.bashrc
 
 # 2. 清理文件
 rm -rf ~/.local/share/iterm-claude-auto-recovery
-rm -f ~/.claude/tab-sessions.json
+rm -f ~/.claude/tab-sessions.tsv
 ```
 
 ## 使用方式

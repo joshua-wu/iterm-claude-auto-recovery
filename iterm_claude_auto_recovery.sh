@@ -1,20 +1,33 @@
 # Claude Code iTerm2 tab-session auto-resume
-# 映射文件：iTerm2 tab UUID → claude session ID
-_claude_tab_map="$HOME/.claude/tab-sessions.json"
+# 映射文件：iTerm2 tab UUID → claude session ID (TSV: tab_uuid \t session_id \t cwd)
+_claude_tab_map="$HOME/.claude/tab-sessions.tsv"
 
 _claude_tab_save() {
   local key="$1" sid="$2"
-  [[ -f "$_claude_tab_map" ]] || echo '{}' > "$_claude_tab_map"
-  local tmp=$(jq --arg k "$key" --arg s "$sid" --arg d "$PWD" \
-    '.[$k] = {sessionId: $s, cwd: $d}' "$_claude_tab_map" 2>/dev/null)
-  [[ -n "$tmp" ]] && echo "$tmp" > "$_claude_tab_map"
+  _claude_tab_remove "$key"
+  printf '%s\t%s\t%s\n' "$key" "$sid" "$PWD" >> "$_claude_tab_map"
 }
 
 _claude_tab_remove() {
   local key="$1"
   [[ -f "$_claude_tab_map" ]] || return
-  local tmp=$(jq --arg k "$key" 'del(.[$k])' "$_claude_tab_map" 2>/dev/null)
-  [[ -n "$tmp" ]] && echo "$tmp" > "$_claude_tab_map"
+  local tmp=$(grep -v "^${key}	" "$_claude_tab_map")
+  if [[ -n "$tmp" ]]; then
+    printf '%s\n' "$tmp" > "$_claude_tab_map"
+  else
+    : > "$_claude_tab_map"
+  fi
+}
+
+_claude_tab_lookup() {
+  local key="$1" field="$2"
+  [[ -f "$_claude_tab_map" ]] || return
+  local line=$(grep "^${key}	" "$_claude_tab_map" | head -1)
+  [[ -z "$line" ]] && return
+  case "$field" in
+    sid) printf '%s' "$line" | cut -f2 ;;
+    cwd) printf '%s' "$line" | cut -f3 ;;
+  esac
 }
 
 _claude_tab_session_exists() {
@@ -81,16 +94,14 @@ claude() {
   fi
 
   # 自动恢复：查映射 → 验证 session 文件存在 → resume
-  if [[ -f "$_claude_tab_map" ]]; then
-    local sid=$(jq -r --arg k "$iterm_uuid" '.[$k].sessionId // empty' "$_claude_tab_map" 2>/dev/null)
-    local saved_cwd=$(jq -r --arg k "$iterm_uuid" '.[$k].cwd // empty' "$_claude_tab_map" 2>/dev/null)
-    if [[ -n "$sid" ]]; then
-      if [[ "$saved_cwd" == "$PWD" ]] && _claude_tab_session_exists "$sid"; then
-        command claude --resume "$sid" "${clean_args[@]}"
-        return
-      else
-        _claude_tab_remove "$iterm_uuid"
-      fi
+  local sid=$(_claude_tab_lookup "$iterm_uuid" sid)
+  local saved_cwd=$(_claude_tab_lookup "$iterm_uuid" cwd)
+  if [[ -n "$sid" ]]; then
+    if [[ "$saved_cwd" == "$PWD" ]] && _claude_tab_session_exists "$sid"; then
+      command claude --resume "$sid" "${clean_args[@]}"
+      return
+    else
+      _claude_tab_remove "$iterm_uuid"
     fi
   fi
 
@@ -102,9 +113,12 @@ claude() {
 
 # 调试工具：查看当前 tab-session 映射
 claude-sessions() {
-  if [[ -f "$_claude_tab_map" ]]; then
+  if [[ -f "$_claude_tab_map" ]] && [[ -s "$_claude_tab_map" ]]; then
     echo "Tab-Session Mappings:"
-    jq -r 'to_entries[] | "  \(.key[:8])... → \(.value.sessionId[:12])... (\(.value.cwd))"' "$_claude_tab_map"
+    while IFS=$'\t' read -r key sid cwd; do
+      [[ -z "$key" ]] && continue
+      echo "  ${key:0:8}... → ${sid:0:12}... ($cwd)"
+    done < "$_claude_tab_map"
     echo ""
     echo "Current tab: ${ITERM_SESSION_ID#*:}"
   else
